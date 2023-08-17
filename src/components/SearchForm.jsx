@@ -14,6 +14,7 @@ import airports from '../airports.json';
 import { Group, Text, MantineColor, SelectItemProps, Autocomplete } from '@mantine/core';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import {DatePickerInput} from '@mantine/dates'
 
 
 function SearchForm ({darkMode, setFlights, setFlightListLoading, setError, returnFlight, setReturnFlight, currency, setCurrency}) {
@@ -25,7 +26,10 @@ function SearchForm ({darkMode, setFlights, setFlightListLoading, setError, retu
     const [fromLocation, setFromLocation] = useState("LHR, London Heathrow Airport");
     const [toLocation, setToLocation] = useState("");
     const [departureDate, setDepartureDate] = useState(dayjs());
+    const [departureDates, setDepartureDates] = useState([null,null]);
     const [returnDate, setReturnDate] = useState(null);
+    const [returnDates, setReturnDates] = useState([null, null]);
+
     const [adultValue, setAdultValue] = useState(1);
     const [childrenValue, setChildrenValue] = useState(0);
     const [infantsValue, setInfantsValue] = useState(0);
@@ -93,7 +97,7 @@ function SearchForm ({darkMode, setFlights, setFlightListLoading, setError, retu
         setError(false);
         try {
             if (!moreFilters) {
-                const URL = `http://localhost:8081/booking/getFiltered/?flyTo=${toLocation.substring(0,3)}&flyFrom=${fromLocation.substring(0,3)}&leaveDateFrom=${departureDate.subtract(4, "days").toDate().toLocaleDateString()}&leaveDateTo=${departureDate.add(4, "days").toDate().toLocaleDateString()}&numberOfAdults=${adultValue}`
+                const URL = `http://localhost:8081/booking/getFiltered/?flyTo=${toLocation.substring(0,3)}&flyFrom=${fromLocation.substring(0,3)}&leaveDateFrom=${departureDate[0].format('DD/MM/YYYY')}&leaveDateTo=${departureDate[1].format('DD/MM/YYYY')}&numberOfAdults=${adultValue}`
                 console.log(URL);
                 const response = await axios.get(URL)
                 console.log(response);
@@ -204,7 +208,7 @@ function SearchForm ({darkMode, setFlights, setFlightListLoading, setError, retu
                         </MantineProvider>
                     </div>
                     <div className='flex gap-2 mb-4 sm:mb-0'>
-                        <DatePicker
+                        {/* <DatePicker
                             label="Departing"
                             defaultValue={dayjs()}
                             value={departureDate}
@@ -212,14 +216,34 @@ function SearchForm ({darkMode, setFlights, setFlightListLoading, setError, retu
                             
                             maxDate={returnDate ? returnDate.subtract(1, "days") : ''}
                             onChange={(newValue) => setDepartureDate(newValue)}
-                        />
-                        {returnFlight ? 
-                        <DatePicker
-                            label="Returning"
-                            value={returnDate}
-                            minDate={departureDate.add(1, "days")}
-                            onChange={(newValue) => setReturnDate(newValue)}
-                        /> : <></>}
+                        /> */}
+                        <MantineProvider theme={{ colorScheme: `${darkMode === "dark" ? 'dark' : 'light'}` }}>
+                            <DatePickerInput
+                                type="range"
+                                // label="Departure Date Range"
+                                className='w-[200px] rounded-md'
+                                size='md'
+                                placeholder='Departure Date Range'
+                                valueFormat='DD/MM/YYYY'
+                                value={departureDates}
+                                minDate={new Date()}
+                                maxDate={returnDates[0] ? dayjs((returnDates[0])).subtract(1, "day") : ''}
+                                onChange={(newValue) => setDepartureDates(newValue)}
+                            />
+                            {returnFlight ? 
+                                <DatePickerInput
+                                    type="range"
+                                    // label="Departure Date Range"
+                                    className='w-[200px] rounded-md'
+                                    size='md'
+                                    placeholder='Return Date Range'
+                                    valueFormat='DD/MM/YYYY'
+                                    value={returnDates}
+                                    minDate={departureDates[1] ? (dayjs(departureDates[1])).add(1, "day") : ''}
+                                    onChange={(newValue) => setReturnDates(newValue)}
+                                /> : <></>}
+                        </MantineProvider>
+                        
                     </div>
                     <p onClick={() => setMoreFilters(!moreFilters)} className='box-border text-white h-[57px] font-semibold border-[1px] rounded-lg px-3 hover:bg-opacity-100 dark:hover:bg-opacity-100 border-blue-500 dark:border-blue-700 hover:text-white shadow-black hover:shadow-md bg-blue-500 dark:bg-blue-700 transition-all duration-200 active:brightness-[80%] active:shadow-none active:translate-y-[1px] cursor-pointer w-[20%] text-sm flex items-center'>{moreFilters ? <p><RemoveIcon/> Less Filters</p> : <p><AddIcon/> More Filters</p>}</p>
 
